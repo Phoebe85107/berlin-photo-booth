@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [finalImage, setFinalImage] = useState<string | null>(null);
   const [isFlashActive, setIsFlashActive] = useState(false);
   const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
+  const [recordedBlobType, setRecordedBlobType] = useState<string>('');
   const [isTorchSupported, setIsTorchSupported] = useState(false);
   const [isTorchOn, setIsTorchOn] = useState(false);
   const [isMirrored, setIsMirrored] = useState(true);
@@ -82,7 +83,14 @@ const App: React.FC = () => {
   };
 
   const getSupportedMimeType = () => {
-    const types = ['video/webm;codecs=vp8', 'video/webm', 'video/mp4'];
+    // Priority for MP4 to ensure iOS/Mobile compatibility
+    const types = [
+      'video/mp4;codecs=h264',
+      'video/mp4',
+      'video/webm;codecs=vp9',
+      'video/webm;codecs=vp8',
+      'video/webm'
+    ];
     for (const type of types) {
       if (MediaRecorder.isTypeSupported(type)) return type;
     }
@@ -155,7 +163,7 @@ const App: React.FC = () => {
     const mimeType = getSupportedMimeType();
     const stream = canvas.captureStream(30);
     const chunks: Blob[] = [];
-    const recorder = new MediaRecorder(stream, { mimeType });
+    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2500000 });
     recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
     
     const renderLoop = () => {
@@ -200,6 +208,7 @@ const App: React.FC = () => {
     return new Promise<void>((resolve) => {
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: mimeType });
+        setRecordedBlobType(mimeType);
         setRecordedVideoUrl(URL.createObjectURL(blob));
         videos.forEach(v => { v.pause(); URL.revokeObjectURL(v.src); });
         resolve();
@@ -235,7 +244,9 @@ const App: React.FC = () => {
   const downloadVideo = () => {
     if (!recordedVideoUrl) return;
     const link = document.createElement('a');
-    const ext = recordedVideoUrl.includes('mp4') ? 'mp4' : 'webm';
+    // More robust extension check
+    const isMp4 = recordedBlobType.includes('mp4');
+    const ext = isMp4 ? 'mp4' : 'webm';
     link.download = `photoautomat-animated-${Date.now()}.${ext}`;
     link.href = recordedVideoUrl;
     link.click();
