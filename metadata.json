@@ -1,0 +1,7 @@
+{
+  "name": "Berlin Retro Photo Booth",
+  "description": "An immersive 80s-90s style photo booth experience with mechanical curtain animations, high-contrast B&W processing, and a vertical 4-strip output.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
