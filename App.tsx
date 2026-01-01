@@ -235,8 +235,13 @@ const App: React.FC = () => {
     }
   }, [state, photos]);
 
-  const abortSession = () => {
+  const abortSession = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     isCancelledRef.current = true;
+    // 如果在 READY 階段點擊 X，直接重置
+    if (state === BoothState.READY) {
+      resetBooth();
+    }
   };
 
   const isInside = state === BoothState.READY || state === BoothState.COUNTDOWN || state === BoothState.SHUTTER || state === BoothState.DEVELOPING;
@@ -269,20 +274,20 @@ const App: React.FC = () => {
         <div className="relative w-full h-full max-w-5xl md:h-auto md:aspect-[16/11] bg-[#141414] p-4 md:p-10 flex flex-col items-center justify-center shadow-[0_60px_120px_rgba(0,0,0,1)] border border-white/5 animate-[zoomIn_0.6s_ease-out] z-[100]">
           
           {(isShooting || state === BoothState.READY) && (
-            <div className="absolute top-4 md:top-8 right-4 md:right-12 flex items-center gap-4 z-[200]">
+            <div className="absolute top-4 md:top-8 right-4 md:right-12 flex items-center gap-4 z-[300]">
                {isShooting && (
                  <button 
-                  onClick={() => { isPausedRef.current = !isPausedRef.current; setIsPausedUI(isPausedRef.current); }}
-                  className={`p-3 md:p-4 rounded-full border transition-all ${isPausedUI ? 'bg-white text-black border-white' : 'bg-white/5 text-white border-white/20'}`}
+                  onClick={(e) => { e.stopPropagation(); isPausedRef.current = !isPausedRef.current; setIsPausedUI(isPausedRef.current); }}
+                  className={`p-3 md:p-4 rounded-full border transition-all active:scale-90 ${isPausedUI ? 'bg-white text-black border-white' : 'bg-white/5 text-white border-white/20 hover:bg-white/10'}`}
                  >
-                   {isPausedUI ? <Play size={18} fill="currentColor" /> : <Pause size={18} fill="currentColor" />}
+                   {isPausedUI ? <Play size={20} fill="currentColor" /> : <Pause size={20} fill="currentColor" />}
                  </button>
                )}
                <button 
                 onClick={abortSession}
-                className="p-3 md:p-4 rounded-full bg-red-600/20 text-red-500 border border-red-500/30 hover:bg-red-600 hover:text-white transition-all"
+                className="p-3 md:p-4 rounded-full bg-red-600/20 text-red-500 border border-red-500/30 hover:bg-red-600 hover:text-white transition-all active:scale-90"
                >
-                 <X size={18} />
+                 <X size={20} />
                </button>
             </div>
           )}
@@ -304,11 +309,10 @@ const App: React.FC = () => {
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md p-6 text-center z-[80] animate-fade-in">
                  <h2 className="elegant-font italic text-white text-2xl md:text-4xl mb-4 md:mb-8 tracking-widest uppercase">Select Style</h2>
                  
-                 {/* 手機版優化：改用結構化的 Grid 排列 */}
                  <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 md:gap-4 mb-8 md:mb-12 w-full max-w-md md:max-w-xl">
                    {Object.values(FilterType).map((fid) => (
                      <button
-                        key={fid} onClick={() => setSelectedFilter(fid)}
+                        key={fid} onClick={(e) => { e.stopPropagation(); setSelectedFilter(fid); }}
                         className={`py-2 md:py-4 px-1 md:px-3 border-2 transition-all clean-font text-[9px] md:text-xs uppercase tracking-tighter sm:tracking-widest font-bold h-12 md:h-16 flex items-center justify-center ${
                           selectedFilter === fid ? 'bg-white text-black border-white scale-105 shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'bg-black/40 text-white/50 border-white/10 hover:border-white/30'
                         }`}
@@ -319,7 +323,7 @@ const App: React.FC = () => {
                  </div>
 
                  <button 
-                  onClick={startShootingSequence}
+                  onClick={(e) => { e.stopPropagation(); startShootingSequence(); }}
                   className="bg-red-600 hover:bg-red-500 text-white px-8 md:px-12 py-4 md:py-6 rounded-full flex items-center gap-3 transition-all active:scale-95 shadow-[0_0_30px_rgba(220,38,38,0.5)] group"
                  >
                    <Camera size={24} className="group-hover:rotate-12 transition-transform" />
